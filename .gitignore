@@ -1,0 +1,10 @@
+lib/
+__pycache__/
+bin/
+include/
+lib64/
+share/
+c.json
+partice.txt
+pyvenv.cfg
+run.sh

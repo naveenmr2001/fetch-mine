@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        {%for each in output%}
+            <p>Name of the Company : {{ each[0] }}</p>
+            <p>Website link of the Company: {{ each[1] }}</p>
+            <p>Logo of the Company : </p><img  class= "img" src="{{ each[2] }}" alt="blank">
+        {%endfor%}
+    </div>
+</body>
+</html>
