@@ -1,11 +1,11 @@
-from flask import Flask, redirect, request, session,jsonify,render_template
-import os,socket,urllib,multiprocessing,pickle
-from urllib.parse import urlparse
+from flask import Flask, redirect, request, session,render_template
+import os,socket,multiprocessing,pickle,base64
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 import google.auth.exceptions
+from google.auth.transport import requests
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from request_file import logo,website_name
@@ -17,7 +17,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 flow = Flow.from_client_secrets_file(
     'c.json',
-    scopes=['https://www.googleapis.com/auth/gmail.readonly'],
+    scopes=['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/userinfo.profile'],
     redirect_uri='http://localhost:5000/oauth2callback'
 )
 
@@ -122,8 +122,10 @@ def predict():
 
 @app.route('/login')
 def login():
-    authorization_url, state = flow.authorization_url(prompt='consent')
-    print(authorization_url)
+    flow.from_client_secrets_file(
+        'c.json', scopes=['openid', 'email', 'profile']
+    )
+    authorization_url,state = flow.authorization_url(prompt='consent',include_granted_scopes='true',access_type='offline')
     session['state'] = state
     return redirect(authorization_url)
 
@@ -131,6 +133,7 @@ def login():
 def oauth2callback():
     try:
         flow.fetch_token(authorization_response = request.url)
+        
         credentials = flow.credentials
         session['credentials'] = {
             'token': credentials.token,
@@ -140,12 +143,40 @@ def oauth2callback():
             'client_secret': credentials.client_secret,
             'scopes': credentials.scopes
         }
-        return redirect("/main")
+        return redirect('/main')
     except google.auth.exceptions.RefreshError:
         return redirect('/login')
 
 @app.route("/main")
 def main():
+    
+    credentials = Credentials.from_authorized_user_info(session['credentials'])
+    service = build('gmail', 'v1', credentials=credentials)
+    profile = service.users().getProfile(userId='me').execute()
+    email = profile['emailAddress'] 
+    people_service = build('people', 'v1', credentials=credentials)
+    photo_response = people_service.people().get(
+        resourceName='people/me',
+        personFields='names,emailAddresses,photos'
+    ).execute()
+
+    service = build('gmail', 'v1', credentials=credentials)
+    profile = service.users().getProfile(userId='me').execute()
+
+    if 'photos' in photo_response:
+        photos = photo_response['photos']
+
+    if len(photos) > 0:
+        profile_photo_url = photos[0]['url']
+    
+    if 'names' in photo_response:
+        user_name = photo_response['names'][0]['displayName']
+
+    email = profile['emailAddress']
+    
+    print(user_name)
+    print(profile_photo_url)
+    print(email)
     return render_template("main.html")
 
 
