@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='./style/details.css') }}">
+    <title>Details</title>
+</head>
+<body>
+    <div class=container>
+      {% if flag == "False": %}
+        <div id="form1">
+          <form action="{{ url_for('signup',name=name,email=email,photo=photourl) }}" method="post">
+            <div class="header-value">
+              <h1>
+                SIGN UP
+              </h1>
+
+            <div id="mailbox">
+                <input type="mail" name="name" value="{{ name }}" style="width:270px; height:42px; border: solid 1px #c2c4c6; font-size:16px; padding-left:8px;" readonly/>
+            </div>
+            <div id="mailbox">
+                <input  type="mail" name="email" value="{{ email }}" style="width:270px; height:42px; border: solid 1px #c2c4c6; font-size:16px; padding-left:8px;" readonly/>
+            </div>
+            <div id="mailbox">
+                <input  type="password" name="password" style="width:270px; height:42px; border: solid 1px #c2c4c6; font-size:16px; padding-left:8px;" placeholder="Enter the password" />
+            </div>
+            <div>
+                <input type="submit" id="button2" value="Next" />
+            </div>
+          </form>
+        </div>
+        {% else %}
+        <div id="form1">
+          <form action="{{ url_for('signin',email=email) }}" method="post">
+              <div class="header-value">
+                  <h1>
+                    SIGN IN
+                  </h1>
+              </div>
+              <div id="mailbox">
+                  <input  type="mail" name="email" value="{{ email }}" style="width:270px; height:42px; border: solid 1px #c2c4c6; font-size:16px; padding-left:8px;" readonly/>
+              </div>
+              <div id="mailbox">
+                  <input  type="password" name="password" style="width:270px; height:42px; border: solid 1px #c2c4c6; font-size:16px; padding-left:8px;" placeholder="Enter the password" />
+              </div>
+              <div>
+                  <input type="submit" id="button2" value="Next" />
+              </div>
+        </form>
+          {% endif %}
+      </div>
+        
+    </div>
+</body>
+</html>
