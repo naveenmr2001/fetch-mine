@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, session,render_template,url_for
+from flask import Flask,redirect,request,session,render_template,url_for
 import os,socket,multiprocessing,pickle
 import sqlite3
 import pandas as pd
@@ -98,9 +98,11 @@ def call():
 
 
 
-@app.route("/redirect")
-def query():
-    return render_template("query.html")
+@app.route("/main")
+def main():
+    if 'credentials' not in session:
+        return redirect('/')
+    return render_template("main.html")
 
 @app.route('/signup',methods=["POST"])
 def signup():
@@ -116,7 +118,7 @@ def signup():
         query = "INSERT INTO users (name, gmail, logo, password) VALUES (?, ?, ?, ?);"
         conn.execute(query, (name, email, photo, password))
         conn.commit()
-        return url_for('second',email=email)
+        return url_for('main',email=email)
 
 @app.route('/signin',methods=['POST','GET'])
 def signin():
@@ -134,12 +136,12 @@ def signin():
         user = cursor.fetchone()
         conn.close()
         if(user):
-            return redirect("/redirect")
+            return redirect("/main")
         else:
             return redirect("/")
 
-@app.route('/second',methods=['GET', 'POST'])
-def second():
+@app.route('/displayUserDetails',methods=['GET', 'POST'])
+def displayUserDetails():
 
     if 'credentials' not in session:
         return redirect('/')
@@ -154,8 +156,8 @@ def second():
 
     return render_template("details.html",name=name,email=email,photourl=profile_photo_url,flag=user_present)
 
-@app.route('/main')
-def main():
+@app.route('/userDetails')
+def userDetails():
     if 'credentials' not in session:
         return redirect('/')
 
@@ -194,13 +196,13 @@ def main():
         cursor = conn.execute(query, (email,))
         if(bool(cursor.fetchone())):
             user_present = True
-            return redirect(url_for('second',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
+            return redirect(url_for('displayUserDetails',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
         else:
-            return redirect(url_for('second',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
+            return redirect(url_for('displayUserDetails',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
     else:
         create_database()
     
-    return redirect(url_for('second',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
+    return redirect(url_for('displayUserDetails',name=user_name,email=email,photourl=profile_photo_url,flag=user_present))
 
 @app.route('/oauth2callback')
 def oauth2callback():
@@ -218,7 +220,7 @@ def oauth2callback():
             'scopes': credentials.scopes
         }
 
-        return redirect('/main')
+        return redirect('/userDetails')
 
     except google.auth.exceptions.RefreshError:
 
