@@ -119,3 +119,12 @@ text-align: center;
 .header-value{
     text-align:center;
 }
+
+.flush-message{
+    position: absolute;
+    top:9.5rem;
+    color:black;
+    left:37rem;
+    height:3rem;
+    font-weight: bolder;
+}

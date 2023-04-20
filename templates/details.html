@@ -32,6 +32,14 @@
           </form>
         </div>
         {% else %}
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div id="flash-message" class="flush-message">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
         <div id="form2">
           <form action="{{ url_for('signin',email=email) }}" method="post">
               <div class="header-value">
@@ -53,5 +61,10 @@
       </div>
         
     </div>
+    <script>
+      setTimeout(function() {
+        document.getElementById("flash-message").style.display = "none";
+      }, 5000);
+    </script>
 </body>
 </html>

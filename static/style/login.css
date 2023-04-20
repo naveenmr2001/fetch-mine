@@ -7,6 +7,7 @@
 
 body{
   overflow-y: hidden;
+  background-image: url("../images/background.jpeg");
 }
 
 .main-page{
@@ -242,4 +243,13 @@ button {
 }
 #g {
   background:#ba342a;
+}
+
+.flush-message{
+  position: absolute;
+  top:9.5rem;
+  color:black;
+  left:37rem;
+  height:3rem;
+  font-weight: bolder;
 }

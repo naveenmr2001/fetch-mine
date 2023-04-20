@@ -243,3 +243,12 @@
   #g {
     background:#ba342a;
   }
+
+  .flush-message{
+    position: absolute;
+    top:9.5rem;
+    color:black;
+    left:37rem;
+    font-weight: bolder;
+    height:3rem;
+  }

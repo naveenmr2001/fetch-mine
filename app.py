@@ -1,19 +1,20 @@
-from flask import Flask,redirect,request,session,render_template,url_for
-import os,socket,multiprocessing,pickle,re
+from flask import Flask,redirect,request,session,render_template,url_for,jsonify,flash
+import os,socket,multiprocessing,re
 import sqlite3
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 import google.auth.exceptions
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from request_file import logo,website_name
-from database import create_database,create_email_table,drop_table,create_footprint_table
+from database import create_database,create_email_table,create_footprint_table
 from datetime import datetime
+from machine_learning import FetchBreach,PredictRisk
 
 app = Flask(__name__)
 app.secret_key = '92736'
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 60
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
@@ -26,6 +27,12 @@ flow = Flow.from_client_secrets_file(
     redirect_uri='http://localhost:5000/oauth2callback'
 )
 
+@app.route('/clear')
+def clear_flash():
+    flash('')
+    return redirect(url_for('index'))
+
+
 def get_messages_limit(query):
 
     try:
@@ -33,7 +40,7 @@ def get_messages_limit(query):
         credentials = Credentials.from_authorized_user_info(session['credentials'])
         service = build('gmail', 'v1', credentials=credentials)
 
-        response = service.users().messages().list(userId='me',maxResults=10).execute()
+        response = service.users().messages().list(userId='me',maxResults=20).execute()
 
         messages = []
 
@@ -117,7 +124,7 @@ def get_messages(query):
         credentials = Credentials.from_authorized_user_info(session['credentials'])
         service = build('gmail', 'v1', credentials=credentials)
 
-        response = service.users().messages().list(userId='me',maxResults=100).execute()
+        response = service.users().messages().list(userId='me',maxResults=10).execute()
 
         messages = []
 
@@ -189,8 +196,6 @@ def get_messages(query):
                     cursor.execute("INSERT INTO emails (fromemail, toemail, subjectemail, date) VALUES (?, ?, ?, ?)",
                                 (res, toemail, subjectemail, date_str))
                     conn.commit()
-                else:
-                    print('Email message already exists in the database.')
 
         domain_list = list(domain_list)
         return domain_list
@@ -200,9 +205,49 @@ def get_messages(query):
         print(f'An error occurred: {error}')
         return []
 
+@app.route('/logout')
+def logout():
+
+    if 'credentials' not in session:
+
+        flash("Oops! It looks like you're not signed in.")
+
+        return redirect("/")
+    
+    flash("You have been logged out.")
+    session.pop('credentials', None)
+    return redirect("/")
+
+
+@app.route('/footprintDetails')
+def footprintDetails():
+
+    if 'credentials' not in session:
+
+        flash("Oops! It looks like you're not signed in.")
+
+        return redirect("/")
+     
+    websiteName = request.args.get('webstieUrl')
+    websiteUrl = request.args.get('websieName')
+    websiteLogo = request.args.get('websiteLogo')
+    websiteDomain = websiteName.split('//')[-1].split('/')[0].replace('www.', '')
+    breachCount = FetchBreach(websiteDomain)
+    riskOfWebsite = PredictRisk(websiteDomain,breachCount)
+    cursor = conn.execute("SELECT * FROM emails WHERE  fromemail = ?", (websiteDomain,))
+    rows = cursor.fetchall()
+    print(rows)
+    return jsonify([websiteName,websiteLogo,websiteUrl,websiteDomain,breachCount,riskOfWebsite])
+
 @app.route("/footprint")
 def footprint():
 
+    if 'credentials' not in session:
+
+        flash("Oops! It looks like you're not signed in.")
+
+        return redirect("/")
+    
     userEmail = request.args.get('email')
     print(userEmail)
     conn = sqlite3.connect('database.db',check_same_thread=False)
@@ -236,18 +281,15 @@ def footprint():
             email_id = cursor.fetchone()
 
             if email_id is None:
-                cursor.execute("INSERT INTO footprint (fromemail, toemail, subjectemail, date) VALUES (?, ?, ?, ?)",
+                cursor.execute("INSERT INTO footprint (name, url, logo, email) VALUES (?, ?, ?, ?)",
                         (website, url, logo_data, userEmail))
                 conn.commit()
-            else:
-                print('Email message already exists in the database.')
 
         cursor = conn.execute("SELECT * FROM footprint WHERE email = ?", (userEmail,))
         rows = cursor.fetchall()    
         print(rows)
         for row in rows:
-            name, url, logolink, email = row[0], row[1], row[2], row[3]
-            print(f"Found data for {email}: logo={logolink}, name={name}, url={url}")
+            name, url, logolink = row[0], row[1], row[2]
             content_list.append([name,url,logolink])
 
         return render_template("footprint.html",output = content_list)
@@ -275,15 +317,12 @@ def footprint():
                 cursor.execute("INSERT INTO footprint (name, url, logo, email) VALUES (?, ?, ?, ?)",
                         (website, url, logo_data, userEmail))
                 conn.commit()
-            else:
-                print('Email message already exists in the database.')
 
         cursor = conn.execute("SELECT * FROM footprint WHERE email = ?", (userEmail,))
         rows = cursor.fetchall()    
         print(rows)
         for row in rows:
-            name, url, logolink, email = row[0], row[1], row[2], row[3]
-            print(f"Found data for {email}: logo={logolink}, name={name}, url={url}")
+            name, url, logolink = row[0], row[1], row[2]
             content_list.append([name,url,logolink])
         return render_template("footprint.html",output = content_list)
     
@@ -293,31 +332,23 @@ def footprint():
 @app.route("/main")
 def main():
     email = request.args.get('email')
+
     if 'credentials' not in session:
-        return redirect('/')
+
+        flash("Oops! It looks like you're not signed in")
+
+        return redirect("/")
+    
     return render_template("main.html",email=email)
-
-@app.route('/signup',methods=["POST"])
-def signup():
-
-    if 'credentials' not in session:
-        return redirect('/')
-
-    if request.method == 'POST':
-        name = request.args.get('name')
-        email = request.args.get('email')
-        photo = request.args.get('photo')
-        password = request.form['password']
-        query = "INSERT INTO users (name, gmail, logo, password) VALUES (?, ?, ?, ?);"
-        conn.execute(query, (name, email, photo, password))
-        conn.commit()
-        return url_for('signin',email=email)
 
 @app.route('/signin',methods=['POST','GET'])
 def signin():
 
     if 'credentials' not in session:
-        return redirect('/')
+
+        flash("Oops! It looks like you're not signed in")
+
+        return redirect("/")
     
     if request.method == 'POST':
         email = request.args.get('email')
@@ -329,15 +360,49 @@ def signin():
         user = cursor.fetchone()
         conn.close()
         if(user):
+
+            flash("Welcome back! We're glad to see you again")
+
             return redirect(url_for('main',email=email))
+        
         else:
-            return redirect(url_for('/'))
+            
+            session.pop('credentials', None)
+            
+            flash("Invalid input: Please double-check your input and try again")
+
+            return redirect("/")
+
+@app.route('/signup',methods=["POST"])
+def signup():
+
+    if 'credentials' not in session:
+
+        flash("Oops! It looks like you're not signed in")
+
+        return redirect("/")
+
+    if request.method == 'POST':
+        name = request.args.get('name')
+        email = request.args.get('email')
+        photo = request.args.get('photo')
+        password = request.form['password']
+        query = "INSERT INTO users (name, gmail, logo, password) VALUES (?, ?, ?, ?);"
+        conn.execute(query, (name, email, photo, password))
+        conn.commit()
+        flash('Congratulations! You have successfully signed up')
+        return redirect(url_for('displayUserDetails',email=email))
+
+
 
 @app.route('/displayUserDetails',methods=['GET', 'POST'])
 def displayUserDetails():
 
     if 'credentials' not in session:
-        return redirect(url_for('/'))
+
+        flash("Oops! It looks like you're not signed in")
+
+        return redirect("/")
 
     name = request.args.get('name')
 
@@ -351,8 +416,12 @@ def displayUserDetails():
 
 @app.route('/userDetails')
 def userDetails():
+    
     if 'credentials' not in session:
-        return redirect(url_for('/'))
+
+        flash("Oops! It looks like you're not signed in")
+
+        return redirect("/")
 
     user_present = False
 
@@ -430,16 +499,16 @@ def login():
 
 @app.route("/sign")
 def sign():
-    if 'credentials' not in session:
-        return redirect(url_for('login'))
+    return redirect(url_for('login'))
 
 @app.route('/')
-
 def index():
+    redirect(url_for('clear_flash'))
     return render_template("login.html")
 
 if __name__ == '__main__':
 
+    flash('')
     app.debug = True
 
     app.run()
