@@ -32,8 +32,8 @@ def PredictRisk(domainName,breachCount):
     print(Y_prediction)
     result = str()
     if(Y_prediction[0] == 1):
-        return "LOW"
+        return "Low"
     elif(Y_prediction[0] == 2):
-        return "MEDIUM"
+        return "Medium"
     elif(Y_prediction[0] == 0):
-        return "HIGH"
+        return "High"

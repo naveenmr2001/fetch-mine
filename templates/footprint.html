@@ -22,18 +22,17 @@
               </li>
             </ul>
             
-            <a href="#"> <button class="btn" style="margin-right: 10px;" type="submit">Dashboard</button></a>
             <a href="/logout"> <button class="btn" style="margin-right: 10px;" type="submit">Logout</button></a>
           </div>
         </div>
       </nav>
       
       <main>
-        <h1 class="main-header">Footprints</h1>
+        <h1 class="main-header">FOOTPRINTS</h1>
         <section class="footprint-section">
         {%for each in output%}
           <a href="{{ url_for('footprintDetails',webstieUrl=each[1],websieName=each[0],websiteLogo=each[2]) }}"><div class="footprint-card">
-            <img src="{{ each[2] }}" class="footprint-image">
+            <img  src="{{ each[2] }}" class="footprint-image" style="background-image: url('../static/images/background.jpeg'); background-repeat: no-repeat; width: 5rem; height:5rem; border-radius:50%;">
             <span>{{ each[0] }}</span>
             <span>{{ each[1] }}</span>            
           </div></a>

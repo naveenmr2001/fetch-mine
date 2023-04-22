@@ -23,7 +23,8 @@ conn = sqlite3.connect('database.db',check_same_thread=False)
 
 flow = Flow.from_client_secrets_file(
     'c.json',
-    scopes=['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/userinfo.profile'],
+    scopes=['https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/userinfo.profile'],
     redirect_uri='http://localhost:5000/oauth2callback'
 )
 
@@ -204,15 +205,10 @@ def get_messages(query):
 
         print(f'An error occurred: {error}')
         return []
+    
 
 @app.route('/logout')
 def logout():
-
-    if 'credentials' not in session:
-
-        flash("Oops! It looks like you're not signed in.")
-
-        return redirect("/")
     
     flash("You have been logged out.")
     session.pop('credentials', None)
@@ -228,16 +224,27 @@ def footprintDetails():
 
         return redirect("/")
      
-    websiteName = request.args.get('webstieUrl')
-    websiteUrl = request.args.get('websieName')
+    websiteName = request.args.get('websieName')
+    websiteUrl = request.args.get('webstieUrl')
     websiteLogo = request.args.get('websiteLogo')
-    websiteDomain = websiteName.split('//')[-1].split('/')[0].replace('www.', '')
+    websiteDomain = websiteUrl.split('//')[-1].split('/')[0].replace('www.', '')
     breachCount = FetchBreach(websiteDomain)
     riskOfWebsite = PredictRisk(websiteDomain,breachCount)
+    if(riskOfWebsite == "Low"):
+        flash("The risk is low so website no danger")
+    elif(riskOfWebsite == "Medium"):
+        flash("The risk is Medium so website lower danger")
+    elif(riskOfWebsite == "High"):
+        flash("The risk is High so website danger so please log out")
     cursor = conn.execute("SELECT * FROM emails WHERE  fromemail = ?", (websiteDomain,))
     rows = cursor.fetchall()
-    print(rows)
-    return jsonify([websiteName,websiteLogo,websiteUrl,websiteDomain,breachCount,riskOfWebsite])
+    email_list = []
+    for i in rows:
+        print(i)
+        email , date = i[2] , i[3]
+        email_list.append([email,date])
+    print(email_list)
+    return render_template("footprint-details.html",name=websiteName,url=websiteUrl,logo=websiteLogo,email = email_list,risk=riskOfWebsite)
 
 @app.route("/footprint")
 def footprint():
@@ -259,6 +266,7 @@ def footprint():
 
     cursor = conn.execute("SELECT * FROM footprint WHERE email = ?", (userEmail,))
     rows = cursor.fetchall()
+    print(rows)
     if rows:
         query = ''
         pool = multiprocessing.Pool(processes=4)

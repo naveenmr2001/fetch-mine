@@ -22,14 +22,55 @@
               </li>
             </ul>
             
-            <a href=""> <button class="btn" style="margin-right: 10px;" type="submit">Dashboard</button></a>
             <a href="/logout"> <button class="btn" style="margin-right: 10px;" type="submit">Logout</button></a>
           </div>
         </div>
       </nav>
       <main>
-            
+        <section class="main-section">
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              {% if risk == "Low" %}
+                {% for message in messages %}
+                  <div id="flash-message" class="flush-message alert alert-success" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% elif risk == "Medium" %}
+                {% for message in messages %}
+                  <div id="flash-message" class="flush-message alert alert-warning" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% else %}
+                {% for message in messages %}
+                  <div id="flash-message" class="flush-message alert alert-danger" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endif %}
+          {% endwith %}
+          <div class="header"><h1>FOOTPRINT DETAILS</h1></div>
+          <div class="content">
+            <div class="content-details">
+              <div class="image-section"><img src="{{ logo }}" alt="img" style="background-image: url('../static/images/background.jpeg'); background-repeat: no-repeat; width: 8rem; height:8rem; border-radius:50%;"/></div>
+              <div class="name-section">Name: <span> {{ name }}</span></div>
+              <div class="email-section">Website url: <span> {{ url }}</span></div>
+              <div class="risk-website">Risk of the Website with past breach: <span> {{ risk }}</span></div>
+            </div>
+            <div class="email-content">
+            {%for each in email%}
+            <br/>
+              <div class="email">
+                <span>Subject: {{each[0]}}</span>
+                <span>Date: {{each[1]}}</span>
+              </div>
+            <br/>
+            {%endfor%}
+            </div>
+          </div>
+        </section>
       </main>
+      <script>
+        setTimeout(function() {
+          document.getElementById("flash-message").style.display = "none";
+        }, 5000);
+      </script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js" integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js" integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ" crossorigin="anonymous"></script>
 </body>
