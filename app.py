@@ -14,7 +14,6 @@ from machine_learning import FetchBreach,PredictRisk
 app = Flask(__name__)
 app.secret_key = '92736'
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 60
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
@@ -206,6 +205,41 @@ def get_messages(query):
         print(f'An error occurred: {error}')
         return []
     
+@app.route('/dashboard')
+def dashboard():
+    if 'credentials' not in session:
+
+        flash("Timeout of dashboard")
+
+        return redirect("/")
+    
+    credentials = Credentials.from_authorized_user_info(session['credentials'])
+    service = build('gmail', 'v1', credentials=credentials)
+
+    profile = service.users().getProfile(userId='me').execute()
+
+    email = profile['emailAddress'] 
+
+    profile = service.users().getProfile(userId='me').execute()
+    people_service = build('people', 'v1', credentials=credentials)
+
+    photo_response = people_service.people().get(
+        resourceName='people/me',
+        personFields='names,emailAddresses,photos'
+    ).execute()
+
+    if 'photos' in photo_response:
+        photos = photo_response['photos']
+
+    if len(photos) > 0:
+        profile_photo_url = photos[0]['url']
+    
+    if 'names' in photo_response:
+        user_name = photo_response['names'][0]['displayName']
+    print(user_name)
+    print(profile_photo_url)
+    print(email)
+    return render_template("dashboard.html",name=user_name,photo=profile_photo_url,email=email)
 
 @app.route('/logout')
 def logout():

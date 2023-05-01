@@ -4,6 +4,7 @@
 	<title>Footprint</title>
 	<link href="https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
+  <link rel="icon" type="image/x-icon" href="../static/images/logo.jpeg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="../static/style/footprint-details.css">    
 </head>
@@ -21,7 +22,6 @@
                 <a class="nav-link active" aria-current="page" href="#" style="color: #fff;">Home</a>
               </li>
             </ul>
-            
             <a href="/logout"> <button class="btn" style="margin-right: 10px;" type="submit">Logout</button></a>
           </div>
         </div>
@@ -32,15 +32,15 @@
             {% if messages %}
               {% if risk == "Low" %}
                 {% for message in messages %}
-                  <div id="flash-message" class="flush-message alert alert-success" role="alert">{{ message }}</div>
+                  <div id="flash-message" class="flush-message alert alert-success" style="background-color: rgb(55, 216, 55);" role="alert">{{ message }}</div>
                 {% endfor %}
               {% elif risk == "Medium" %}
                 {% for message in messages %}
-                  <div id="flash-message" class="flush-message alert alert-warning" role="alert">{{ message }}</div>
+                  <div id="flash-message" class="flush-message alert alert-warning" role="alert" style="background-color: rgb(200, 194, 10);">{{ message }}</div>
                 {% endfor %}
               {% else %}
                 {% for message in messages %}
-                  <div id="flash-message" class="flush-message alert alert-danger" role="alert">{{ message }}</div>
+                  <div id="flash-message" class="flush-message alert alert-danger" role="alert"  style="background-color: red; ">{{ message }}</div>
                 {% endfor %}
               {% endif %}
             {% endif %}
