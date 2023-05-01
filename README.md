@@ -7,7 +7,7 @@ A Flask application provides users with an intuitive user interface to view thei
 ### Extension:
 - OAuth: [Flask-OAuth](https://pythonhosted.org/Flask-OAuth/)
 - Sqllite3: [Flask-Sqllite3](https://docs.python.org/3/library/sqlite3.html)
-- Pickle: [Flask-Pickle]
+- Pickle: [Flask-Pickle](https://pypi.org/project/pickle5/)
 
 ## Installation
 
@@ -54,7 +54,10 @@ app = Flask(__name__ )
 app.config.from_pyfile('config.Development.cfg')
 ```
 
+### Run a Flask Application
 
+```
+flask run
 ```
 
 ### OAuth Setup
