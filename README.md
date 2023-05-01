@@ -21,20 +21,17 @@ $ pip install -r requirements.txt
 ```
 .
 |──────app/
-| |────__init__.py
-| | |────cve/
-| | |────user/
-| | |────oauth/
-| |──────config.Development.cfg
-| |──────config.Production.cfg
-| |──────config.Testing.cfg
-| |────dao/
+| |────app.py
+| |────google.py
+| |────machine_learning.py
+| |────database.py
+| |────request_file.py
 | |────model/
-| |────oauth/
-| |────util/
-|──────run.py
-|──────tests/
-
+| | |────model.pkl
+| |────templates/
+| | |────html Templates
+| |────static/
+| | |────css and image Templates
 ```
 
 
